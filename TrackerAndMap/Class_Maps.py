@@ -40,23 +40,46 @@ class Map:
                         [r-15,  c],
                         [r+5,c+10],
                             [r, c]],)
-        return fed        
+        
+        angle = -self.tracker_angle_values_0_to_360
+
+        # Convert the angle to radians
+        angle = angle * np.pi / 180.0
+
+        # Define the rotation matrix
+        cos_theta = np.cos(angle)
+        sin_theta = np.sin(angle)
+        rotation_matrix = np.array([[cos_theta, -sin_theta], [sin_theta, cos_theta]])
+
+        # Translate the fiducial coordinates to origin
+        translated_fed = fed - [r, c]
+
+        # Rotate the fiducial by multiplying it with the rotation matrix
+        rotated_fed = np.dot(translated_fed, rotation_matrix)
+
+        # Translate the rotated fiducial back to its original position
+        rotated_fed = rotated_fed + [r, c]
+
+        # Convert the rotated fiducial to integer pixel coordinates
+        rotated_fed = np.round(rotated_fed).astype(np.int32)
+
+        return rotated_fed        
     
     def transforms(self,tracker_xz, tracker_theta):    #tracker_xz is 2x1 matrix
 
         p = self.rot_y @ tracker_xz
         p = self.rot_x @ p
         p = np.add(p, self.trans_x)
-        tracker_coordinates = np.add(p, self.trans_z)   #tracker_coordinates is 2x1 matrix
+        self.tracker_coordinates = np.add(p, self.trans_z)   #tracker_coordinates is 2x1 matrix
         #print("refined_tracker_coordinates: ",tracker_coordinates, end="  ")
 
-        self.img_c = int(tracker_coordinates[0][0]*1000/self.resolution)
-        self.img_r = int(tracker_coordinates[1][0]*1000/self.resolution)
+        self.img_c = int(self.tracker_coordinates[0][0]*1000/self.resolution)
+        self.img_r = int(self.tracker_coordinates[1][0]*1000/self.resolution)
         self.bot_pos = (self.img_r, self.img_c)
 
         # Convert sensor values from -180 to 180 range to 0 to 360 range
-        tracker_angle_values_0_to_360 = (tracker_theta + 360) % 360
-        #print("refined_tracker_theta: ", tracker_angle_values_0_to_360, end="")
+        self.tracker_angle_values_0_to_360 = (tracker_theta + 360) % 360
+        print("refined_tracker_theta: ", self.tracker_angle_values_0_to_360, end="")
 
         
         return self.bot_pos
