@@ -1,7 +1,5 @@
 import socket
-
-
-
+import sys
 
 HOST = ''        # Symbolic name, meaning all available interfaces
 PORT = 1234      # Arbitrary non-privileged port
@@ -25,15 +23,17 @@ while True:
         # Receive data from the client
         data = client_socket.recv(1024)
         if data:
-            print( data.decode())
+            print(data.decode())
         else:
             # Connection closed by client
             print('Connection closed by client')
             client_socket.close()
             server_socket.close()
+            sys.exit()
 
     except:
         # Error occurred while receiving data
         print('Error occurred while receiving data')
         client_socket.close()
         server_socket.close()
+        sys.exit()
